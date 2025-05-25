@@ -1,0 +1,54 @@
+name: Auto Add DNS via Cloudflare
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  add-record:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Python and dependencies
+      run: pip install pyyaml requests
+
+    - name: Add DNS Record
+      env:
+        CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+      run: |
+        import os, yaml, requests, glob
+
+        files = glob.glob("subdomains/*.yaml")
+        for file in files:
+            with open(file) as f:
+                data = yaml.safe_load(f)
+
+            name = data["subdomain"]
+            record_type = list(data["record"].keys())[0]
+            record_value = data["record"][record_type]
+
+            headers = {
+              "Authorization": f"Bearer {os.environ['CF_API_TOKEN']}",
+              "Content-Type": "application/json"
+            }
+
+            payload = {
+              "type": record_type,
+              "name": f"{name}.r-u.live",
+              "content": record_value,
+              "ttl": 3600,
+              "proxied": False
+            }
+
+            r = requests.post(
+              f"https://api.cloudflare.com/client/v4/zones/{os.environ['CF_ZONE_ID']}/dns_records",
+              json=payload,
+              headers=headers
+            )
+            print(f"{name}.r-u.live ->", r.json())
