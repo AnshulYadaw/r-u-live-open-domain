@@ -1,54 +1,314 @@
-name: Auto Add DNS via Cloudflare
+name: 🚀 Automated DNS Management via Cloudflare
 
 on:
   pull_request:
     types: [closed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update all DNS records'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  add-record:
-    if: github.event.pull_request.merged == true
+  validate-and-deploy:
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-    - name: Install Python and dependencies
-      run: pip install pyyaml requests
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
-    - name: Add DNS Record
+    - name: 📦 Install Dependencies
+      run: |
+        pip install --upgrade pip
+        pip install pyyaml requests jsonschema
+
+    - name: 🔍 Get Changed Files
+      id: changed-files
+      uses: tj-actions/changed-files@v41
+      with:
+        files: subdomains/*.yaml
+
+    - name: ✅ Validate YAML Files
       env:
         CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
       run: |
-        import os, yaml, requests, glob
+        python << 'EOF'
+        import os, yaml, requests, glob, re, sys
+        from jsonschema import validate, ValidationError
 
-        files = glob.glob("subdomains/*.yaml")
-        for file in files:
-            with open(file) as f:
-                data = yaml.safe_load(f)
+        # Define schema for validation
+        schema = {
+            "type": "object",
+            "properties": {
+                "subdomain": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-]{1,61}[a-zA-Z0-9])?$"
+                },
+                "owner": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "email": {"type": "string", "format": "email"}
+                    },
+                    "required": ["name", "email"]
+                },
+                "record": {
+                    "type": "object",
+                    "oneOf": [
+                        {"properties": {"A": {"type": "string"}}, "required": ["A"]},
+                        {"properties": {"CNAME": {"type": "string"}}, "required": ["CNAME"]}
+                    ]
+                }
+            },
+            "required": ["subdomain", "owner", "record"]
+        }
 
-            name = data["subdomain"]
-            record_type = list(data["record"].keys())[0]
-            record_value = data["record"][record_type]
+        def validate_ip(ip):
+            """Validate IPv4 address"""
+            parts = ip.split('.')
+            return len(parts) == 4 and all(0 <= int(part) <= 255 for part in parts if part.isdigit())
 
+        def validate_domain(domain):
+            """Validate domain name"""
+            if len(domain) > 253:
+                return False
+            pattern = re.compile(r'^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$')
+            return pattern.match(domain) is not None
+
+        def check_existing_dns(subdomain):
+            """Check if DNS record already exists"""
             headers = {
-              "Authorization": f"Bearer {os.environ['CF_API_TOKEN']}",
-              "Content-Type": "application/json"
+                "Authorization": f"Bearer {os.environ['CF_API_TOKEN']}",
+                "Content-Type": "application/json"
             }
-
-            payload = {
-              "type": record_type,
-              "name": f"{name}.r-u.live",
-              "content": record_value,
-              "ttl": 3600,
-              "proxied": False
-            }
-
-            r = requests.post(
-              f"https://api.cloudflare.com/client/v4/zones/{os.environ['CF_ZONE_ID']}/dns_records",
-              json=payload,
-              headers=headers
+            
+            response = requests.get(
+                f"https://api.cloudflare.com/client/v4/zones/{os.environ['CF_ZONE_ID']}/dns_records",
+                headers=headers,
+                params={"name": f"{subdomain}.r-u.live"}
             )
-            print(f"{name}.r-u.live ->", r.json())
+            
+            if response.status_code == 200:
+                return len(response.json().get('result', [])) > 0
+            return False
+
+        errors = []
+        existing_subdomains = set()
+
+        # Get all YAML files
+        files = glob.glob("subdomains/*.yaml")
+        
+        for file in files:
+            try:
+                with open(file, 'r') as f:
+                    data = yaml.safe_load(f)
+                
+                # Validate against schema
+                validate(data, schema)
+                
+                subdomain = data["subdomain"]
+                record_type = list(data["record"].keys())[0]
+                record_value = data["record"][record_type]
+                
+                # Check for duplicate subdomains
+                if subdomain in existing_subdomains:
+                    errors.append(f"❌ Duplicate subdomain '{subdomain}' found in {file}")
+                existing_subdomains.add(subdomain)
+                
+                # Validate record value
+                if record_type == "A" and not validate_ip(record_value):
+                    errors.append(f"❌ Invalid IP address '{record_value}' in {file}")
+                elif record_type == "CNAME" and not validate_domain(record_value):
+                    errors.append(f"❌ Invalid domain '{record_value}' in {file}")
+                
+                # Check reserved subdomains
+                reserved = ["www", "mail", "ftp", "admin", "api", "app", "blog", "shop", "store"]
+                if subdomain in reserved:
+                    errors.append(f"❌ Subdomain '{subdomain}' is reserved in {file}")
+                
+                print(f"✅ {file}: {subdomain}.r-u.live → {record_value} ({record_type})")
+                
+            except ValidationError as e:
+                errors.append(f"❌ Schema validation failed for {file}: {e.message}")
+            except yaml.YAMLError as e:
+                errors.append(f"❌ YAML parsing failed for {file}: {str(e)}")
+            except Exception as e:
+                errors.append(f"❌ Error processing {file}: {str(e)}")
+
+        if errors:
+            print("\n🚨 VALIDATION ERRORS:")
+            for error in errors:
+                print(error)
+            sys.exit(1)
+        
+        print(f"\n✅ All {len(files)} subdomain files are valid!")
+        EOF
+
+    - name: 🌐 Deploy DNS Records
+      env:
+        CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        FORCE_UPDATE: ${{ github.event.inputs.force_update }}
+      run: |
+        python << 'EOF'
+        import os, yaml, requests, glob, json
+        from datetime import datetime
+
+        def create_or_update_dns_record(subdomain, record_type, record_value):
+            """Create or update DNS record in Cloudflare"""
+            headers = {
+                "Authorization": f"Bearer {os.environ['CF_API_TOKEN']}",
+                "Content-Type": "application/json"
+            }
+            
+            zone_id = os.environ['CF_ZONE_ID']
+            record_name = f"{subdomain}.r-u.live"
+            
+            # Check if record exists
+            existing_response = requests.get(
+                f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records",
+                headers=headers,
+                params={"name": record_name}
+            )
+            
+            payload = {
+                "type": record_type,
+                "name": record_name,
+                "content": record_value,
+                "ttl": 3600,
+                "proxied": False
+            }
+            
+            if existing_response.status_code == 200:
+                existing_records = existing_response.json().get('result', [])
+                
+                if existing_records:
+                    # Update existing record
+                    record_id = existing_records[0]['id']
+                    response = requests.put(
+                        f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}",
+                        json=payload,
+                        headers=headers
+                    )
+                    action = "UPDATED"
+                else:
+                    # Create new record
+                    response = requests.post(
+                        f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records",
+                        json=payload,
+                        headers=headers
+                    )
+                    action = "CREATED"
+            else:
+                # Create new record
+                response = requests.post(
+                    f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records",
+                    json=payload,
+                    headers=headers
+                )
+                action = "CREATED"
+            
+            return response, action
+
+        print(f"🚀 Starting DNS deployment at {datetime.now()}")
+        
+        files = glob.glob("subdomains/*.yaml")
+        success_count = 0
+        error_count = 0
+        
+        for file in files:
+            try:
+                with open(file, 'r') as f:
+                    data = yaml.safe_load(f)
+                
+                subdomain = data["subdomain"]
+                record_type = list(data["record"].keys())[0]
+                record_value = data["record"][record_type]
+                
+                response, action = create_or_update_dns_record(subdomain, record_type, record_value)
+                
+                if response.status_code in [200, 201]:
+                    result = response.json()
+                    if result.get('success'):
+                        print(f"✅ {action}: {subdomain}.r-u.live → {record_value} ({record_type})")
+                        success_count += 1
+                    else:
+                        errors = result.get('errors', [])
+                        print(f"❌ FAILED: {subdomain}.r-u.live - {errors}")
+                        error_count += 1
+                else:
+                    print(f"❌ HTTP {response.status_code}: {subdomain}.r-u.live - {response.text}")
+                    error_count += 1
+                    
+            except Exception as e:
+                print(f"❌ Error processing {file}: {str(e)}")
+                error_count += 1
+
+        print(f"\n📊 DEPLOYMENT SUMMARY:")
+        print(f"   ✅ Success: {success_count}")
+        print(f"   ❌ Errors: {error_count}")
+        print(f"   📁 Total Files: {len(files)}")
+        
+        if error_count > 0:
+            exit(1)
+        
+        print(f"\n🎉 All DNS records deployed successfully!")
+        EOF
+
+    - name: 💬 Comment on PR
+      if: github.event.pull_request.merged == true
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const yaml = require('js-yaml');
+          
+          // Get changed files
+          const changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}';
+          const files = changedFiles.split(' ').filter(f => f.endsWith('.yaml'));
+          
+          if (files.length === 0) return;
+          
+          let comment = '🎉 **DNS Records Successfully Deployed!**\n\n';
+          comment += '| Subdomain | Target | Type | Status |\n';
+          comment += '|-----------|--------|------|--------|\n';
+          
+          for (const file of files) {
+            try {
+              const content = fs.readFileSync(file, 'utf8');
+              const data = yaml.load(content);
+              const subdomain = data.subdomain;
+              const recordType = Object.keys(data.record)[0];
+              const target = data.record[recordType];
+              
+              comment += `| \`${subdomain}.r-u.live\` | \`${target}\` | ${recordType} | ✅ Active |\n`;
+            } catch (error) {
+              console.error(`Error reading ${file}:`, error);
+            }
+          }
+          
+          comment += '\n⚡ **Your subdomain(s) should be active within 5-10 minutes!**\n\n';
+          comment += '🔗 **Next Steps:**\n';
+          comment += '- Test your subdomain: `nslookup yourname.r-u.live`\n';
+          comment += '- For GitHub Pages: Add custom domain in repository settings\n';
+          comment += '- Enable HTTPS in your hosting platform\n\n';
+          comment += '❓ **Need help?** Mention @anshulyadaw in a comment.';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

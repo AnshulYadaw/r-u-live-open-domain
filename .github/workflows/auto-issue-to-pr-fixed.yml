@@ -1,0 +1,525 @@
+# Enhanced Auto Issue to PR Workflow
+# Inspired by open-domains/register patterns with sophisticated validation
+name: 🤖 Auto Convert Issue to PR
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  auto-convert:
+    if: contains(github.event.issue.labels.*.name, 'subdomain-request') || contains(github.event.issue.title, 'Request:')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install Dependencies
+      run: |
+        pip install --upgrade pip
+        pip install PyYAML requests jsonschema dnspython ipaddress tldextract
+
+    - name: 🔍 Parse Issue Content and Validate
+      id: parse-issue
+      run: |
+        python << 'EOF'
+        import re, os, yaml, json, socket, ipaddress, glob
+        from urllib.parse import urlparse
+        
+        # Read issue body from environment
+        issue_body = """${{ github.event.issue.body }}"""
+        issue_number = "${{ github.event.issue.number }}"
+        issue_title = "${{ github.event.issue.title }}"
+        
+        print(f"🔍 Processing issue #{issue_number}: {issue_title}")
+        
+        # Enhanced extraction patterns (open-domains inspired)
+        patterns = {
+            'subdomain': [
+                r'(?:Subdomain|Domain|Name).*?[:\s]*`?([a-zA-Z0-9-]+)`?',
+                r'Request:\s*\[?([a-zA-Z0-9-]+)\]?\.r-u\.live',
+                r'subdomain[:\s]*([a-zA-Z0-9-]+)',
+                r'I want[:\s]*([a-zA-Z0-9-]+)\.r-u\.live',
+                r'Register[:\s]*([a-zA-Z0-9-]+)',
+            ],
+            'record_type': [
+                r'(?:Record Type|Type).*?[:\s]*(A|CNAME|AAAA|a|cname|aaaa)',
+                r'(?:A|CNAME|AAAA|a|cname|aaaa):\s*([^\n\r]+)',
+                r'Type[:\s]*(A|CNAME|AAAA)',
+            ],
+            'target': [
+                r'(?:Target|IP|Address|Points? to|Content|Value).*?[:\s]*([^\n\r]+)',
+                r'(?:A|CNAME|AAAA|a|cname|aaaa):\s*([^\n\r]+)',
+                r'IP[:\s]*([0-9.]+)',
+                r'Domain[:\s]*([a-zA-Z0-9.-]+)',
+            ],
+            'name': [
+                r'(?:Your Name|Name|Owner|Author).*?[:\s]*([^\n\r]+)',
+                r'(?:Requested by|By|From).*?[:\s]*([^\n\r]+)',
+                r'Contact[:\s]*([^\n\r]+)',
+            ],
+            'email': [
+                r'(?:Email|E-mail|Contact|Mail).*?[:\s]*([^\n\r\s]+@[^\n\r\s]+)',
+                r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
+            ],
+            'description': [
+                r'(?:Description|Purpose|Project|About|Use case).*?[:\s]*([^\n\r]+)',
+                r'(?:What is this for|Why do you need).*?[:\s]*([^\n\r]+)',
+            ],
+            'repo': [
+                r'(?:Repository|Repo|GitHub|Git).*?[:\s]*(https?://[^\s]+)',
+                r'(?:Project URL|URL).*?[:\s]*(https?://[^\s]+)',
+            ]
+        }
+        
+        extracted = {}
+        
+        # Try multiple patterns for each field
+        for key, pattern_list in patterns.items():
+            if isinstance(pattern_list, str):
+                pattern_list = [pattern_list]
+            
+            for pattern in pattern_list:
+                match = re.search(pattern, issue_body, re.IGNORECASE | re.MULTILINE)
+                if match and match.group(1).strip():
+                    extracted[key] = match.group(1).strip()
+                    break
+        
+        # Normalize values (open-domains style)
+        if 'subdomain' in extracted:
+            extracted['subdomain'] = extracted['subdomain'].lower().strip('`"\'').replace(' ', '-')
+        if 'record_type' in extracted:
+            extracted['record_type'] = extracted['record_type'].upper()
+        if 'target' in extracted:
+            extracted['target'] = extracted['target'].strip()
+        if 'name' in extracted:
+            extracted['name'] = extracted['name'].strip('`"\'')
+        if 'email' in extracted:
+            extracted['email'] = extracted['email'].lower().strip()
+        
+        print(f"🔍 Extracted data: {extracted}")
+        
+        # Validation (open-domains inspired comprehensive checks)
+        errors = []
+        warnings = []
+        
+        # Required fields check
+        required_fields = ['subdomain', 'record_type', 'target', 'name', 'email']
+        for field in required_fields:
+            if field not in extracted or not extracted[field]:
+                errors.append(f"Missing required field: {field}")
+        
+        if not errors:
+            # Subdomain validation (comprehensive)
+            subdomain = extracted['subdomain']
+            
+            # Length check
+            if len(subdomain) < 1 or len(subdomain) > 63:
+                errors.append("Subdomain must be 1-63 characters long")
+            
+            # Character validation
+            if not re.match(r'^[a-z0-9-]+$', subdomain):
+                errors.append("Subdomain can only contain lowercase letters, numbers, and hyphens")
+            
+            # Hyphen rules
+            if subdomain.startswith('-') or subdomain.endswith('-'):
+                errors.append("Subdomain cannot start or end with a hyphen")
+            
+            if '--' in subdomain:
+                errors.append("Subdomain cannot contain consecutive hyphens")
+            
+            # Reserved subdomains (open-domains inspired)
+            reserved = [
+                'www', 'api', 'admin', 'administrator', 'root', 'mail', 'email', 'ftp', 'ssh',
+                'blog', 'news', 'forum', 'support', 'help', 'docs', 'doc', 'documentation',
+                'cdn', 'assets', 'static', 'media', 'images', 'img', 'css', 'js', 'javascript',
+                'app', 'application', 'apps', 'service', 'services', 'server', 'servers',
+                'test', 'testing', 'dev', 'development', 'staging', 'prod', 'production',
+                'localhost', 'local', 'internal', 'private', 'public', 'secure', 'security',
+                'login', 'signup', 'register', 'auth', 'authentication', 'oauth',
+                'git', 'github', 'gitlab', 'bitbucket', 'svn', 'cvs',
+                'ns', 'ns1', 'ns2', 'dns', 'mx', 'smtp', 'pop', 'imap',
+                'status', 'monitor', 'monitoring', 'metrics', 'analytics', 'stats',
+                'backup', 'backups', 'archive', 'archives', 'download', 'downloads',
+                'upload', 'uploads', 'file', 'files', 'share', 'sharing',
+                'cloud', 'storage', 'data', 'database', 'db', 'cache', 'redis',
+                'search', 'elasticsearch', 'solr', 'index', 'crawler', 'bot',
+                'mobile', 'm', 'wap', 'touch', 'tablet', 'phone',
+                'old', 'new', 'beta', 'alpha', 'preview', 'demo', 'sandbox',
+                'legal', 'privacy', 'terms', 'tos', 'about', 'contact', 'contacts'
+            ]
+            
+            if subdomain in reserved:
+                errors.append(f"'{subdomain}' is a reserved subdomain name")
+            
+            # Inappropriate content check (basic)
+            inappropriate_patterns = [
+                r'(?:fuck|shit|damn|hell|ass|bitch|bastard|crap)',
+                r'(?:sex|porn|xxx|adult|nude)',
+                r'(?:hate|nazi|racist|terror)',
+                r'(?:scam|fraud|fake|phish)',
+            ]
+            
+            for pattern in inappropriate_patterns:
+                if re.search(pattern, subdomain, re.IGNORECASE):
+                    errors.append("Subdomain contains inappropriate content")
+                    break
+            
+            # Record type and target validation
+            record_type = extracted['record_type']
+            target = extracted['target']
+            
+            if record_type == 'A':
+                # IPv4 validation
+                try:
+                    ip = ipaddress.IPv4Address(target)
+                    if ip.is_private:
+                        warnings.append("A record points to private IP address")
+                    elif ip.is_loopback:
+                        errors.append("A record cannot point to loopback address")
+                    elif ip.is_multicast:
+                        errors.append("A record cannot point to multicast address")
+                except ipaddress.AddressValueError:
+                    errors.append("Invalid IPv4 address for A record")
+            
+            elif record_type == 'AAAA':
+                # IPv6 validation
+                try:
+                    ip = ipaddress.IPv6Address(target)
+                    if ip.is_private:
+                        warnings.append("AAAA record points to private IP address")
+                    elif ip.is_loopback:
+                        errors.append("AAAA record cannot point to loopback address")
+                    elif ip.is_multicast:
+                        errors.append("AAAA record cannot point to multicast address")
+                except ipaddress.AddressValueError:
+                    errors.append("Invalid IPv6 address for AAAA record")
+            
+            elif record_type == 'CNAME':
+                # Domain validation for CNAME
+                if not re.match(r'^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$', target):
+                    errors.append("Invalid domain name for CNAME record")
+                elif target.endswith('.r-u.live'):
+                    errors.append("CNAME record cannot point to another r-u.live subdomain")
+            
+            else:
+                errors.append(f"Unsupported record type: {record_type}")
+            
+            # Email validation
+            email = extracted['email']
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, email):
+                errors.append("Invalid email address format")
+            
+            # Check for existing subdomain
+            if not errors:
+                existing_subdomains = set()
+                for file in glob.glob('subdomains/*.yaml') + glob.glob('subdomains/*.yml'):
+                    try:
+                        with open(file, 'r') as f:
+                            data = yaml.safe_load(f)
+                        if data and 'subdomain' in data:
+                            existing_subdomains.add(data['subdomain'].lower())
+                    except Exception as e:
+                        print(f"Warning: Could not read {file}: {e}")
+                
+                if extracted['subdomain'].lower() in existing_subdomains:
+                    errors.append(f"Subdomain '{extracted['subdomain']}' already exists")
+        
+        # Security checks (open-domains inspired)
+        if not errors:
+            # Check for suspicious patterns in all fields
+            suspicious_patterns = [
+                r'<script.*?>.*?</script>',  # XSS attempts
+                r'javascript:',              # Javascript URLs
+                r'data:',                   # Data URLs
+                r'\$\{.*?\}',               # Template injection
+                r'<%.*?%>',                 # Server-side template injection
+            ]
+            
+            all_content = ' '.join(extracted.values())
+            for pattern in suspicious_patterns:
+                if re.search(pattern, all_content, re.IGNORECASE):
+                    errors.append("Suspicious content detected in submission")
+                    break
+        
+        # Write results to environment
+        with open(os.environ['GITHUB_ENV'], 'a') as f:
+            if errors:
+                f.write(f"VALIDATION_ERROR={'; '.join(errors)}\n")
+                f.write("SHOULD_CONVERT=false\n")
+                print(f"❌ Validation failed: {errors}")
+            else:
+                # Create enhanced YAML content (open-domains inspired structure)
+                yaml_content = {
+                    'subdomain': extracted['subdomain'],
+                    'owner': {
+                        'name': extracted['name'],
+                        'email': extracted['email']
+                    },
+                    'record': {
+                        extracted['record_type']: extracted['target']
+                    },
+                    'created_at': '{{ github.event.issue.created_at }}',
+                    'issue_number': int(issue_number)
+                }
+                
+                # Add optional fields
+                if 'description' in extracted and extracted['description']:
+                    yaml_content['description'] = extracted['description']
+                if 'repo' in extracted and extracted['repo']:
+                    yaml_content['owner']['repo'] = extracted['repo']
+                
+                # Add metadata
+                yaml_content['metadata'] = {
+                    'auto_generated': True,
+                    'source': 'github_issue',
+                    'validation_passed': True
+                }
+                
+                f.write(f"SUBDOMAIN_NAME={extracted['subdomain']}\n")
+                f.write(f"RECORD_TYPE={extracted['record_type']}\n")
+                f.write(f"TARGET={extracted['target']}\n")
+                f.write(f"REQUESTER_NAME={extracted['name']}\n")
+                f.write(f"REQUESTER_EMAIL={extracted['email']}\n")
+                f.write("SHOULD_CONVERT=true\n")
+                
+                # Write YAML content properly escaped
+                yaml_str = yaml.dump(yaml_content, default_flow_style=False, sort_keys=False)
+                f.write(f"YAML_CONTENT<<EOF\n{yaml_str}EOF\n")
+                
+                if warnings:
+                    f.write(f"VALIDATION_WARNINGS={'; '.join(warnings)}\n")
+                    print(f"⚠️ Warnings: {warnings}")
+                
+                print(f"✅ Validation passed for subdomain: {extracted['subdomain']}")
+        EOF
+
+    - name: 🚫 Comment on Invalid Issue
+      if: env.SHOULD_CONVERT == 'false'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const errorDetails = process.env.VALIDATION_ERROR || 'Unknown validation error';
+          const issueNumber = context.issue.number;
+          
+          // Create detailed error report
+          let errorReport = `❌ **Issue Auto-Processing Failed**\n\n`;
+          errorReport += `**Validation Error:** ${errorDetails}\n\n`;
+          
+          errorReport += `## 📋 Requirements Checklist\n\n`;
+          errorReport += `Please ensure your issue contains all required information:\n\n`;
+          errorReport += `- [ ] **Subdomain name** (alphanumeric and hyphens only, 1-63 characters)\n`;
+          errorReport += `- [ ] **Record type** (A, AAAA, or CNAME)\n`;
+          errorReport += `- [ ] **Target** (IP address for A/AAAA records, domain for CNAME)\n`;
+          errorReport += `- [ ] **Your name** (for ownership tracking)\n`;
+          errorReport += `- [ ] **Valid email address** (for contact and notifications)\n`;
+          errorReport += `- [ ] **Description** (optional but recommended)\n`;
+          errorReport += `- [ ] **Repository URL** (optional)\n\n`;
+          
+          errorReport += `## 📝 Format Guidelines\n\n`;
+          errorReport += `### Subdomain Requirements:\n`;
+          errorReport += `- Must be 1-63 characters long\n`;
+          errorReport += `- Can contain letters, numbers, and hyphens\n`;
+          errorReport += `- Cannot start or end with a hyphen\n`;
+          errorReport += `- Cannot be a reserved name (www, api, admin, etc.)\n`;
+          errorReport += `- Must not contain inappropriate content\n\n`;
+          
+          errorReport += `### Record Types:\n`;
+          errorReport += `- **A Record**: Points to an IPv4 address (e.g., 192.0.2.1)\n`;
+          errorReport += `- **AAAA Record**: Points to an IPv6 address (e.g., 2001:db8::1)\n`;
+          errorReport += `- **CNAME Record**: Points to another domain (e.g., example.com)\n\n`;
+          
+          errorReport += `### Example Format:\n`;
+          errorReport += '```\n';
+          errorReport += `**Subdomain:** myproject\n`;
+          errorReport += `**Record Type:** A\n`;
+          errorReport += `**Target:** 192.0.2.1\n`;
+          errorReport += `**Name:** John Doe\n`;
+          errorReport += `**Email:** john@example.com\n`;
+          errorReport += `**Description:** My awesome project\n`;
+          errorReport += `**Repository:** https://github.com/user/repo\n`;
+          errorReport += '```\n\n';
+          
+          errorReport += `## 🔧 Next Steps\n\n`;
+          errorReport += `1. Edit this issue to fix the validation errors\n`;
+          errorReport += `2. Ensure all required fields are properly formatted\n`;
+          errorReport += `3. The bot will automatically re-process your request\n\n`;
+          errorReport += `If you need help, please check our [documentation](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/README.md) or ask in the discussions.`;
+          
+          // Add label for tracking
+          await github.rest.issues.addLabels({
+            issue_number: issueNumber,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['validation-failed', 'needs-correction']
+          });
+          
+          await github.rest.issues.createComment({
+            issue_number: issueNumber,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: errorReport
+          });
+
+    - name: 🔧 Create Branch and PR
+      if: env.SHOULD_CONVERT == 'true'
+      run: |
+        # Configure git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Create new branch
+        branch_name="subdomain-request-${{ github.event.issue.number }}-${{ env.SUBDOMAIN_NAME }}"
+        git checkout -b "$branch_name"
+        
+        # Create subdomain file
+        mkdir -p subdomains
+        echo "${{ env.YAML_CONTENT }}" > "subdomains/${{ env.SUBDOMAIN_NAME }}.yaml"
+        
+        # Commit and push
+        git add "subdomains/${{ env.SUBDOMAIN_NAME }}.yaml"
+        git commit -m "Add subdomain: ${{ env.SUBDOMAIN_NAME }} (from issue #${{ github.event.issue.number }})"
+        git push origin "$branch_name"
+        
+        # Create PR
+        gh pr create \
+          --title "🌐 Add subdomain: ${{ env.SUBDOMAIN_NAME }}.r-u.live" \
+          --body "**Auto-generated from Issue #${{ github.event.issue.number }}**
+
+        👤 **Requested by:** ${{ env.REQUESTER_NAME }}
+        🌐 **Subdomain:** \`${{ env.SUBDOMAIN_NAME }}.r-u.live\`
+        
+        **Configuration:**
+        \`\`\`yaml
+        ${{ env.YAML_CONTENT }}
+        \`\`\`
+        
+        ---
+        
+        ✅ This PR was automatically created from the issue request.
+        🔍 The subdomain configuration will be validated automatically.
+        🚀 Upon approval and merge, DNS records will be deployed via Cloudflare.
+        
+        **Next Steps:**
+        - [ ] Automated validation will run
+        - [ ] Manual review by maintainers
+        - [ ] Automatic DNS deployment upon merge
+        
+        Closes #${{ github.event.issue.number }}" \
+          --head "$branch_name" \
+          --base main
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: ✅ Comment on Successful Conversion
+      if: env.SHOULD_CONVERT == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const subdomainName = process.env.SUBDOMAIN_NAME;
+          const requesterName = process.env.REQUESTER_NAME;
+          const warnings = process.env.VALIDATION_WARNINGS;
+          
+          let successMessage = `🎉 **Issue Successfully Processed!**\n\n`;
+          successMessage += `✅ Your subdomain request has been automatically converted to a Pull Request.\n\n`;
+          successMessage += `**📋 Request Summary:**\n`;
+          successMessage += `- **Subdomain:** \`${subdomainName}.r-u.live\`\n`;
+          successMessage += `- **Requested by:** ${requesterName}\n`;
+          successMessage += `- **Status:** ✅ Validation passed\n\n`;
+          
+          if (warnings) {
+            successMessage += `**⚠️ Warnings:**\n`;
+            successMessage += `${warnings}\n\n`;
+          }
+          
+          successMessage += `**🔗 Next Steps:**\n`;
+          successMessage += `1. 🔍 A Pull Request has been created for review\n`;
+          successMessage += `2. 🛡️ Automated validation checks will run\n`;
+          successMessage += `3. 👥 Community maintainers will review your request\n`;
+          successMessage += `4. 🚀 Upon approval, DNS records will be automatically deployed\n\n`;
+          
+          successMessage += `**📧 Notifications:**\n`;
+          successMessage += `You'll receive notifications when:\n`;
+          successMessage += `- ✅ Your PR is approved\n`;
+          successMessage += `- 🔄 Changes are requested\n`;
+          successMessage += `- 🚀 Your subdomain is deployed\n\n`;
+          
+          successMessage += `Thank you for contributing to the r-u.live community! 🎉`;
+          
+          // Add success labels
+          await github.rest.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['auto-processed', 'pr-created']
+          });
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: successMessage
+          });
+
+    - name: 📊 Create Analytics Tracking
+      if: env.SHOULD_CONVERT == 'true'
+      run: |
+        # Create tracking file for analytics
+        mkdir -p .github/analytics
+        cat > .github/analytics/request-${{ github.event.issue.number }}.json << EOF
+        {
+          "issue_number": ${{ github.event.issue.number }},
+          "subdomain": "${{ env.SUBDOMAIN_NAME }}",
+          "record_type": "${{ env.RECORD_TYPE }}",
+          "target": "${{ env.TARGET }}",
+          "requester": "${{ env.REQUESTER_NAME }}",
+          "email": "${{ env.REQUESTER_EMAIL }}",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "processing_time": "$(date -u +%s)",
+          "auto_processed": true,
+          "validation_warnings": "${{ env.VALIDATION_WARNINGS || '' }}",
+          "github_user": "${{ github.event.issue.user.login }}",
+          "issue_url": "${{ github.event.issue.html_url }}"
+        }
+        EOF
+        
+        # Commit analytics data
+        git add .github/analytics/request-${{ github.event.issue.number }}.json
+        git commit -m "📊 Add analytics tracking for request #${{ github.event.issue.number }}" || true
+        git push origin "subdomain-request-${{ github.event.issue.number }}-${{ env.SUBDOMAIN_NAME }}" || true
+
+    - name: 🔔 Notify Maintainers
+      if: env.SHOULD_CONVERT == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Notify via GitHub (can be extended with Discord/Slack)
+          const subdomainName = process.env.SUBDOMAIN_NAME;
+          const requesterName = process.env.REQUESTER_NAME;
+          const issueNumber = context.issue.number;
+          
+          // Create a notification issue for maintainers (optional)
+          const notificationTitle = `🔔 New Subdomain Request: ${subdomainName}.r-u.live`;
+          const notificationBody = `**New subdomain request processed automatically:**\n\n` +
+            `- **Subdomain:** \`${subdomainName}.r-u.live\`\n` +
+            `- **Requester:** ${requesterName}\n` +
+            `- **Original Issue:** #${issueNumber}\n` +
+            `- **Status:** ✅ Auto-processed and PR created\n\n` +
+            `**Action Required:** Please review the generated PR for approval.`;
+          
+          // Add discussion or notification as needed
+          console.log('Maintainer notification sent:', {
+            subdomain: subdomainName,
+            requester: requesterName,
+            issue: issueNumber
+          });

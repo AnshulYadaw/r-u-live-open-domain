@@ -1,0 +1,391 @@
+name: 🤝 Community Management & Abuse Handling
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: '0 12 * * *'  # Daily at noon
+  workflow_dispatch:
+
+jobs:
+  handle-abuse-reports:
+    if: contains(github.event.issue.labels.*.name, 'abuse-report') || contains(github.event.issue.title, 'Abuse Report:') || contains(github.event.issue.title, 'Report:')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install Dependencies
+      run: |
+        pip install PyYAML requests
+
+    - name: 🚨 Process Abuse Report
+      run: |
+        python << 'EOF'
+        import re, yaml, glob, os
+        
+        issue_body = """${{ github.event.issue.body }}"""
+        issue_number = "${{ github.event.issue.number }}"
+        
+        print(f"🚨 Processing abuse report #{issue_number}")
+        
+        # Extract reported subdomain
+        subdomain_patterns = [
+            r'(?:Subdomain|Domain).*?[:\s]*([a-zA-Z0-9-]+)\.r-u\.live',
+            r'Report.*?[:\s]*([a-zA-Z0-9-]+)\.r-u\.live',
+            r'([a-zA-Z0-9-]+)\.r-u\.live',
+        ]
+        
+        reported_subdomain = None
+        for pattern in subdomain_patterns:
+            match = re.search(pattern, issue_body, re.IGNORECASE)
+            if match:
+                reported_subdomain = match.group(1).lower()
+                break
+        
+        if not reported_subdomain:
+            print("❌ Could not identify reported subdomain")
+            with open(os.environ['GITHUB_ENV'], 'a') as f:
+                f.write("NEEDS_MANUAL_REVIEW=true\n")
+            exit(0)
+        
+        print(f"📋 Reported subdomain: {reported_subdomain}")
+        
+        # Check if subdomain exists
+        subdomain_file = f"subdomains/{reported_subdomain}.yaml"
+        if not os.path.exists(subdomain_file):
+            print(f"❌ Subdomain file not found: {subdomain_file}")
+            with open(os.environ['GITHUB_ENV'], 'a') as f:
+                f.write("SUBDOMAIN_NOT_FOUND=true\n")
+                f.write(f"REPORTED_SUBDOMAIN={reported_subdomain}\n")
+            exit(0)
+        
+        # Load subdomain data
+        try:
+            with open(subdomain_file, 'r') as f:
+                subdomain_data = yaml.safe_load(f)
+        except Exception as e:
+            print(f"❌ Error reading subdomain file: {e}")
+            exit(1)
+        
+        # Extract abuse type
+        abuse_types = {
+            'malware': ['malware', 'virus', 'trojan', 'malicious'],
+            'phishing': ['phish', 'scam', 'fake', 'impersonat'],
+            'spam': ['spam', 'unwanted', 'bulk'],
+            'illegal': ['illegal', 'copyright', 'dmca', 'piracy'],
+            'harassment': ['harassment', 'abuse', 'threats', 'doxx'],
+            'inappropriate': ['inappropriate', 'nsfw', 'adult', 'explicit']
+        }
+        
+        detected_types = []
+        for abuse_type, keywords in abuse_types.items():
+            for keyword in keywords:
+                if keyword in issue_body.lower():
+                    detected_types.append(abuse_type)
+                    break
+        
+        # Create abuse report metadata
+        abuse_metadata = {
+            'reported_subdomain': reported_subdomain,
+            'report_issue': issue_number,
+            'detected_types': detected_types,
+            'reported_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)',
+            'owner_info': subdomain_data.get('owner', {}),
+            'status': 'under_review'
+        }
+        
+        # Save abuse report
+        os.makedirs('.github/abuse-reports', exist_ok=True)
+        with open(f'.github/abuse-reports/report-{issue_number}.yaml', 'w') as f:
+            yaml.dump(abuse_metadata, f, default_flow_style=False)
+        
+        with open(os.environ['GITHUB_ENV'], 'a') as f:
+            f.write(f"REPORTED_SUBDOMAIN={reported_subdomain}\n")
+            f.write(f"ABUSE_TYPES={','.join(detected_types)}\n")
+            f.write(f"OWNER_EMAIL={subdomain_data.get('owner', {}).get('email', 'unknown')}\n")
+            f.write("ABUSE_REPORT_PROCESSED=true\n")
+        
+        print(f"✅ Abuse report processed and saved")
+        EOF
+
+    - name: 🏷️ Label and Prioritize
+      if: env.ABUSE_REPORT_PROCESSED == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const abuseTypes = process.env.ABUSE_TYPES.split(',').filter(t => t);
+          const reportedSubdomain = process.env.REPORTED_SUBDOMAIN;
+          
+          // Add appropriate labels
+          const labels = ['abuse-report', 'urgent'];
+          
+          // Add specific abuse type labels
+          abuseTypes.forEach(type => {
+            labels.push(`abuse-${type}`);
+          });
+          
+          await github.rest.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: labels
+          });
+          
+          // Create immediate response comment
+          const comment = `🚨 **Abuse Report Received**
+          
+          Thank you for reporting this issue. We take abuse reports seriously.
+          
+          **Reported Subdomain:** \`${reportedSubdomain}.r-u.live\`
+          **Detected Categories:** ${abuseTypes.length > 0 ? abuseTypes.join(', ') : 'General abuse'}
+          **Status:** Under Review
+          
+          ## 📋 Next Steps
+          
+          1. **Immediate Review** - Our team will investigate within 24 hours
+          2. **Evidence Collection** - We'll gather technical evidence
+          3. **Contact Owner** - We'll attempt to contact the subdomain owner
+          4. **Action Decision** - Appropriate action will be taken if abuse is confirmed
+          
+          ## ⚡ Immediate Actions Available
+          
+          If this represents an immediate threat:
+          - Report to relevant authorities
+          - Contact your ISP or security team
+          - Use DNS filtering to block the domain locally
+          
+          **Report ID:** #${context.issue.number}
+          **Processing Time:** Typically 24-48 hours for resolution
+          
+          We'll update this issue with our findings and any actions taken.`;
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: 📧 Notify Maintainers
+      if: env.ABUSE_REPORT_PROCESSED == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const reportedSubdomain = process.env.REPORTED_SUBDOMAIN;
+          const abuseTypes = process.env.ABUSE_TYPES;
+          const ownerEmail = process.env.OWNER_EMAIL;
+          
+          console.log(`🚨 URGENT: Abuse report for ${reportedSubdomain}.r-u.live`);
+          console.log(`Types: ${abuseTypes}`);
+          console.log(`Owner: ${ownerEmail}`);
+          console.log(`Issue: #${context.issue.number}`);
+          
+          // Here you could integrate with Discord, Slack, or email notifications
+          // Example webhook call (commented out):
+          // await fetch(process.env.DISCORD_WEBHOOK_URL, {
+          //   method: 'POST',
+          //   headers: { 'Content-Type': 'application/json' },
+          //   body: JSON.stringify({
+          //     content: `🚨 Abuse report: ${reportedSubdomain}.r-u.live (Issue #${context.issue.number})`
+          //   })
+          // });
+
+  handle-support-requests:
+    if: contains(github.event.issue.labels.*.name, 'support') || contains(github.event.issue.title, 'Help:') || contains(github.event.issue.title, 'Support:')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 💬 Auto-respond to Support
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const supportResponse = `👋 **Thank you for reaching out!**
+          
+          We've received your support request and will help you resolve this issue.
+          
+          ## 📚 Quick Resources
+          
+          Before we dive deeper, please check if these resources help:
+          
+          - 📖 **[Documentation](https://github.com/${context.repo.owner}/${context.repo.repo}#readme)** - Complete setup guide
+          - 🔧 **[Setup Instructions](./docs/SETUP.md)** - Step-by-step setup
+          - 🤝 **[Community Guidelines](./COMMUNITY_GUIDELINES.md)** - Usage policies
+          - 🐛 **[Common Issues](https://github.com/${context.repo.owner}/${context.repo.repo}/issues?q=is%3Aissue+label%3Afaq)** - Frequently encountered problems
+          
+          ## 🆘 For Immediate Help
+          
+          **DNS Issues:**
+          - Check if your DNS records are properly configured
+          - Verify your domain/IP is accessible
+          - DNS propagation can take up to 24-48 hours
+          
+          **Subdomain Requests:**
+          - Ensure you've followed the correct format
+          - Check that your subdomain name is available
+          - Verify all required fields are filled
+          
+          **Technical Problems:**
+          - Include error messages or screenshots
+          - Specify your operating system and browser
+          - Provide steps to reproduce the issue
+          
+          ## 🎯 Getting Better Help
+          
+          To help us assist you faster, please provide:
+          1. **Clear description** of the issue
+          2. **Steps you've already tried**
+          3. **Expected vs actual behavior**
+          4. **Any error messages**
+          
+          A maintainer will review your request and provide personalized assistance shortly!`;
+          
+          await github.rest.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['support', 'needs-triage']
+          });
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: supportResponse
+          });
+
+  community-health-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install Dependencies
+      run: |
+        pip install PyYAML requests
+
+    - name: 📊 Generate Community Report
+      run: |
+        python << 'EOF'
+        import os, yaml, glob, json
+        from datetime import datetime, timedelta
+        
+        # Analyze subdomain registrations
+        subdomain_files = glob.glob("subdomains/*.yaml")
+        total_subdomains = len(subdomain_files)
+        
+        # Analyze by creation date (if available)
+        recent_registrations = 0
+        active_owners = set()
+        record_types = {'A': 0, 'AAAA': 0, 'CNAME': 0}
+        
+        for file in subdomain_files:
+            try:
+                with open(file, 'r') as f:
+                    data = yaml.safe_load(f)
+                
+                # Count active owners
+                if 'owner' in data and 'email' in data['owner']:
+                    active_owners.add(data['owner']['email'])
+                
+                # Count record types
+                if 'record' in data:
+                    for record_type in data['record'].keys():
+                        if record_type in record_types:
+                            record_types[record_type] += 1
+                
+                # Check for recent registrations (last 7 days)
+                if 'created_at' in data:
+                    # This would need proper date parsing in a real implementation
+                    recent_registrations += 1
+                    
+            except Exception as e:
+                print(f"Warning: Could not process {file}: {e}")
+        
+        # Check for abuse reports
+        abuse_reports = glob.glob(".github/abuse-reports/*.yaml")
+        open_abuse_reports = len([f for f in abuse_reports if 'under_review' in open(f).read()])
+        
+        # Generate report
+        report = {
+            'generated_at': datetime.utcnow().isoformat(),
+            'total_subdomains': total_subdomains,
+            'unique_owners': len(active_owners),
+            'recent_registrations_7d': recent_registrations,
+            'record_type_distribution': record_types,
+            'abuse_reports': {
+                'total': len(abuse_reports),
+                'open': open_abuse_reports
+            },
+            'health_score': min(100, max(0, 100 - (open_abuse_reports * 10)))
+        }
+        
+        print("📊 Community Health Report:")
+        print(f"  Total Subdomains: {total_subdomains}")
+        print(f"  Unique Owners: {len(active_owners)}")
+        print(f"  Record Types: {record_types}")
+        print(f"  Open Abuse Reports: {open_abuse_reports}")
+        print(f"  Health Score: {report['health_score']}/100")
+        
+        # Save report
+        os.makedirs('.github/reports', exist_ok=True)
+        with open('.github/reports/community-health.json', 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        # Set environment variables for notifications
+        with open(os.environ['GITHUB_ENV'], 'a') as f:
+            f.write(f"HEALTH_SCORE={report['health_score']}\n")
+            f.write(f"TOTAL_SUBDOMAINS={total_subdomains}\n")
+            f.write(f"OPEN_ABUSE_REPORTS={open_abuse_reports}\n")
+        EOF
+
+    - name: 🚨 Alert on Health Issues
+      if: env.HEALTH_SCORE < '80'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const healthScore = process.env.HEALTH_SCORE;
+          const openReports = process.env.OPEN_ABUSE_REPORTS;
+          
+          // Create an issue for low health score
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 Community Health Alert: Score ${healthScore}/100`,
+            body: `## 🚨 Community Health Alert
+            
+            Our automated health check has detected issues requiring attention:
+            
+            **Health Score:** ${healthScore}/100 (Below threshold of 80)
+            **Open Abuse Reports:** ${openReports}
+            
+            ## 🔍 Recommended Actions
+            
+            1. **Review open abuse reports** - Address pending abuse cases
+            2. **Check recent activity** - Verify no suspicious patterns
+            3. **Update monitoring** - Enhance detection if needed
+            4. **Community outreach** - Communicate with affected users
+            
+            This issue was automatically generated by our community monitoring system.`,
+            labels: ['urgent', 'community-health', 'maintainer-attention']
+          });
+          
+          console.log(`🚨 Health alert created - Score: ${healthScore}/100`);
