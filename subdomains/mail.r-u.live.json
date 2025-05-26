@@ -1,0 +1,18 @@
+{
+  "description": "Email server for r-u.live",
+  "domain": "r-u.live",
+  "subdomain": "mail",
+  
+  "owner": {
+    "repo": "https://github.com/r-u-live/mail-server",
+    "email": "admin@r-u.live"
+  },
+  
+  "record": {
+    "A": ["192.0.2.20"],
+    "MX": ["mail.r-u.live"],
+    "TXT": ["v=spf1 mx ip4:192.0.2.20 ~all"]
+  },
+  
+  "proxied": false
+}

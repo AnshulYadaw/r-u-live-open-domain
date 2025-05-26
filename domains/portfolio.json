@@ -1,0 +1,16 @@
+{
+  "description": "Portfolio website hosted on GitHub Pages",
+  "domain": "r-u.live",
+  "subdomain": "portfolio",
+  
+  "owner": {
+    "repo": "https://github.com/username/portfolio",
+    "email": "user@example.com"
+  },
+  
+  "record": {
+    "CNAME": "username.github.io"
+  },
+  
+  "proxied": true
+}

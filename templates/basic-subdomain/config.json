@@ -1,0 +1,59 @@
+{
+  "name": "subdomain-name",
+  "owner": "owner-username",
+  "created": "YYYY-MM-DD",
+  "purpose": "Purpose of this subdomain",
+  "technology": "Used technology stack",
+  "status": "pending",
+  "settings": {
+    "allowIndexing": true,
+    "enableHttps": true,
+    "redirectWww": false,
+    "customHeaders": {},
+    "caching": {
+      "enabled": true,
+      "maxAge": 3600,
+      "includeFiles": [
+        "*.jpg",
+        "*.png",
+        "*.css",
+        "*.js"
+      ],
+      "excludeFiles": [
+        "admin/*"
+      ]
+    },
+    "security": {
+      "contentSecurityPolicy": "default-src 'self'",
+      "xssProtection": true,
+      "frameOptions": "DENY"
+    },
+    "performance": {
+      "compression": true,
+      "minification": true
+    }
+  },
+  "pr": {
+    "lastUpdated": "",
+    "lastPrNumber": "",
+    "reviewers": [],
+    "autoDeployOnMerge": true,
+    "requireApproval": true
+  },
+  "deployment": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "public",
+    "environmentVariables": [],
+    "provider": "github-pages",
+    "domain": {
+      "useCustomDomain": true,
+      "enforceHttps": true,
+      "primaryDomain": "example.com"
+    }
+  },
+  "analytics": {
+    "enabled": false,
+    "provider": "",
+    "trackingId": ""
+  }
+}

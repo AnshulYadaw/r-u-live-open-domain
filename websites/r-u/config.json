@@ -1,0 +1,61 @@
+{
+  "name": "r-u",
+  "fullDomain": "r-u.live",
+  "owner": "admin",
+  "created": "2023-06-01",
+  "purpose": "Website and service status checker",
+  "technology": "HTML, CSS, JavaScript",
+  "status": "active",
+  "settings": {
+    "allowIndexing": true,
+    "enableHttps": true,
+    "redirectWww": false,
+    "customHeaders": {
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin"
+    },
+    "caching": {
+      "enabled": true,
+      "maxAge": 3600,
+      "includeFiles": ["*.jpg", "*.png", "*.css", "*.js"],
+      "excludeFiles": []
+    },
+    "security": {
+      "contentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'",
+      "xssProtection": true,
+      "frameOptions": "DENY"
+    },
+    "performance": {
+      "compression": true,
+      "minification": true
+    }
+  },
+  "deployment": {
+    "buildCommand": "",
+    "outputDirectory": "",
+    "environmentVariables": [],
+    "provider": "github-pages",
+    "domain": {
+      "useCustomDomain": true,
+      "enforceHttps": true,
+      "primaryDomain": "r-u.live"
+    }
+  },
+  "analytics": {
+    "enabled": true,
+    "provider": "plausible",
+    "trackingId": "r-u.live"
+  },
+  "contact": {
+    "email": "admin@r-u.live",
+    "twitter": "@rulivestatus",
+    "github": "https://github.com/example/r-u-live"
+  },
+  "features": [
+    "Website status checking",
+    "Response time measurement",
+    "History tracking",
+    "Simple interface"
+  ]
+}

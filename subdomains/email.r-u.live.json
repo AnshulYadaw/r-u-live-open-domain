@@ -1,0 +1,17 @@
+{
+  "description": "Email service for r-u.live domain",
+  "domain": "r-u.live",
+  "subdomain": "email",
+  
+  "owner": {
+    "repo": "https://github.com/r-u-live/email-service",
+    "email": "admin@r-u.live"
+  },
+  
+  "record": {
+    "MX": ["mail.protonmail.ch", "mailsec.protonmail.ch"],
+    "TXT": ["v=spf1 include:_spf.protonmail.ch mx ~all"]
+  },
+  
+  "proxied": false
+}

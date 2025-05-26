@@ -1,0 +1,16 @@
+{
+  "description": "Server monitoring dashboard",
+  "domain": "r-u.live",
+  "subdomain": "server",
+  
+  "owner": {
+    "repo": "https://github.com/r-u-live/server-monitor",
+    "email": "admin@r-u.live"
+  },
+  
+  "record": {
+    "A": ["198.51.100.75"]
+  },
+  
+  "proxied": true
+}

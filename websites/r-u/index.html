@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-U Live | Status Checker</title>
+    <meta name="description" content="Check if your website or service is live and responding">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>R-U Live</h1>
+            <p class="tagline">Simple Website & Service Status Checker</p>
+        </header>
+        
+        <main>
+            <div class="check-box">
+                <h2>Check if a website is live</h2>
+                <div class="input-group">
+                    <input type="text" id="url-input" placeholder="Enter website URL (e.g., example.com)" autocomplete="off">
+                    <button id="check-button">Check Status</button>
+                </div>
+                <div class="status-container">
+                    <div id="status-indicator" class="status unknown">
+                        <span id="status-text">Enter a URL to check</span>
+                    </div>
+                    <div id="response-time" class="response-time"></div>
+                </div>
+            </div>
+            
+            <div class="recent-checks">
+                <h3>Recent Checks</h3>
+                <ul id="history-list">
+                    <!-- History will be populated by JavaScript -->
+                </ul>
+            </div>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <h3>Simple</h3>
+                    <p>Easy to use interface for quick status checks</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Fast</h3>
+                    <p>Get results in seconds with response time metrics</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Free</h3>
+                    <p>No cost, no signup required</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2023 r-u.live | <a href="/about.html">About</a> | <a href="/privacy.html">Privacy</a></p>
+        </footer>
+    </div>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>

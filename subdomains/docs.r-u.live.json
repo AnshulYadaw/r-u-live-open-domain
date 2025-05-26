@@ -1,0 +1,16 @@
+{
+  "description": "API documentation service",
+  "domain": "r-u.live",
+  "subdomain": "docs",
+  
+  "owner": {
+    "repo": "https://github.com/r-u-live/documentation",
+    "email": "admin@r-u.live"
+  },
+  
+  "record": {
+    "CNAME": "r-u-live.github.io"
+  },
+  
+  "proxied": true
+}

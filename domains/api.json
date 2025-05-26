@@ -1,0 +1,16 @@
+{
+  "description": "API service running on personal server",
+  "domain": "r-u.live",
+  "subdomain": "api",
+  
+  "owner": {
+    "repo": "https://github.com/username/api-service",
+    "email": "user@example.com"
+  },
+  
+  "record": {
+    "A": ["203.0.113.42"]
+  },
+  
+  "proxied": false
+}

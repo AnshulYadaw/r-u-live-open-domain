@@ -1,0 +1,38 @@
+{
+  "name": "r-u-live-domain",
+  "version": "1.0.0",
+  "description": "Free subdomains for personal sites, open-source projects, and more on r-u.live domain",
+  "main": "dnsconfig.js",
+  "scripts": {
+    "test": "jest tests",
+    "validate": "node tests/validate.js",
+    "list": "node registry.js list",
+    "report": "node registry.js report",
+    "registry": "node registry.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/r-u-live.git"
+  },
+  "keywords": [
+    "dns",
+    "domain",
+    "subdomains",
+    "free",
+    "github",
+    "cloudflare"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/r-u-live/issues"
+  },
+  "homepage": "https://github.com/yourusername/r-u-live#readme",
+  "dependencies": {
+    "glob": "^8.0.3"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "ajv": "^8.12.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "description": "Anshul Yadav's complete profile",
+  "domain": "r-u.live",
+  "subdomain": "anshulyadav",
+  
+  "owner": {
+    "repo": "https://github.com/anshulyadaw/profile",
+    "email": "anshul@example.com"
+  },
+  
+  "record": {
+    "CNAME": "anshulyadaw.github.io"
+  },
+  
+  "proxied": true
+}

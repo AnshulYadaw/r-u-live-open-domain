@@ -1,0 +1,84 @@
+name: Deploy DNS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'domains/**'
+      - 'dnsconfig.js'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'domains/**'
+      - 'dnsconfig.js'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate domain configurations
+        run: npm run validate
+        
+      - name: Verify JSON syntax
+        run: |
+          echo "Checking JSON syntax for all domain files..."
+          find domains -name "*.json" -type f -exec sh -c 'jq . "{}" > /dev/null || echo "Invalid JSON: {}"' \;
+          
+      - name: Generate domain report
+        run: node registry.js report
+        
+  deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Compile DNS configurations
+        run: |
+          echo "Compiling DNS configurations..."
+          node -c dnsconfig.js
+        
+      - name: Preview DNS changes
+        uses: StackExchange/dnscontrol-action@v1
+        with:
+          args: preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          
+      - name: Deploy DNS changes
+        uses: StackExchange/dnscontrol-action@v1
+        with:
+          args: push
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          
+      - name: Create deployment summary
+        run: |
+          echo "## Deployment Summary" > $GITHUB_STEP_SUMMARY
+          echo "Deployment completed at $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "### Domains Updated" >> $GITHUB_STEP_SUMMARY
+          node registry.js list >> $GITHUB_STEP_SUMMARY

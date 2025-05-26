@@ -1,0 +1,17 @@
+{
+  "description": "Main website for r-u.live",
+  "domain": "r-u.live",
+  "subdomain": "www",
+  
+  "owner": {
+    "repo": "https://github.com/r-u-live/website",
+    "email": "admin@r-u.live"
+  },
+  
+  "record": {
+    "A": ["192.0.2.10"],
+    "AAAA": ["2001:db8::10"]
+  },
+  
+  "proxied": true
+}

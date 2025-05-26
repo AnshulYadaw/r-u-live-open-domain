@@ -1,0 +1,330 @@
+{
+  "domain": "example.com",
+  "registrar": {
+    "name": "Example Registrar",
+    "url": "https://registrar.example.com",
+    "accountId": "REG-12345",
+    "expiryDate": "2025-01-15",
+    "autoRenew": true
+  },
+  "nameservers": [
+    "ns1.example.com",
+    "ns2.example.com",
+    "ns3.example.com",
+    "ns4.example.com"
+  ],
+  "dnsRecords": [
+    {
+      "type": "A",
+      "examples": [
+        {
+          "name": "www",
+          "value": "192.0.2.1",
+          "ttl": 3600,
+          "description": "Website host"
+        },
+        {
+          "name": "@",
+          "value": "192.0.2.1",
+          "ttl": 3600,
+          "description": "Apex domain"
+        }
+      ]
+    },
+    {
+      "type": "AAAA",
+      "examples": [
+        {
+          "name": "www",
+          "value": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+          "ttl": 3600,
+          "description": "IPv6 address for website"
+        }
+      ]
+    },
+    {
+      "type": "CNAME",
+      "examples": [
+        {
+          "name": "blog",
+          "value": "hosting.example.com",
+          "ttl": 3600,
+          "description": "Blog subdomain"
+        },
+        {
+          "name": "store",
+          "value": "shop.example.com",
+          "ttl": 3600,
+          "description": "E-commerce site"
+        }
+      ]
+    },
+    {
+      "type": "MX",
+      "examples": [
+        {
+          "name": "@",
+          "value": "mail.example.com",
+          "priority": 10,
+          "ttl": 3600,
+          "description": "Primary mail server"
+        },
+        {
+          "name": "@",
+          "value": "mail2.example.com",
+          "priority": 20,
+          "ttl": 3600,
+          "description": "Secondary mail server"
+        }
+      ]
+    },
+    {
+      "type": "TXT",
+      "examples": [
+        {
+          "name": "@",
+          "value": "v=spf1 include:_spf.example.com ~all",
+          "ttl": 3600,
+          "description": "SPF record"
+        },
+        {
+          "name": "_dmarc",
+          "value": "v=DMARC1; p=reject; rua=mailto:dmarc@example.com",
+          "ttl": 3600,
+          "description": "DMARC policy"
+        },
+        {
+          "name": "example._domainkey",
+          "value": "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrLHyb...",
+          "ttl": 3600,
+          "description": "DKIM key"
+        }
+      ]
+    },
+    {
+      "type": "SRV",
+      "examples": [
+        {
+          "name": "_sip._tcp",
+          "value": "0 5 5060 sip.example.com",
+          "ttl": 3600,
+          "description": "SIP service"
+        },
+        {
+          "name": "_xmpp-server._tcp",
+          "value": "0 5 5269 xmpp.example.com",
+          "ttl": 3600,
+          "description": "XMPP server"
+        }
+      ]
+    },
+    {
+      "type": "NS",
+      "examples": [
+        {
+          "name": "@",
+          "value": "ns1.example.com",
+          "ttl": 86400,
+          "description": "Name server 1"
+        },
+        {
+          "name": "@",
+          "value": "ns2.example.com",
+          "ttl": 86400,
+          "description": "Name server 2"
+        }
+      ]
+    },
+    {
+      "type": "CAA",
+      "examples": [
+        {
+          "name": "@",
+          "value": "0 issue \"letsencrypt.org\"",
+          "ttl": 3600,
+          "description": "Certificate Authority Authorization"
+        }
+      ]
+    },
+    {
+      "type": "PTR",
+      "examples": [
+        {
+          "name": "1.2.0.192.in-addr.arpa",
+          "value": "www.example.com",
+          "ttl": 3600,
+          "description": "Reverse DNS"
+        }
+      ]
+    },
+    {
+      "type": "SSHFP",
+      "examples": [
+        {
+          "name": "@",
+          "value": "3 1 1b2c3d4e5f6g7h8i9j0k",
+          "ttl": 3600,
+          "description": "SSHFP record for host key"
+        }
+      ]
+    },
+    {
+      "type": "TLSA",
+      "examples": [
+        {
+          "name": "_443._tcp",
+          "value": "3 1 1b2c3d4e5f6g7h8i9j0k",
+          "ttl": 3600,
+          "description": "TLSA record for HTTPS"
+        }
+      ]
+    }
+  ],
+  "subdomains": [
+    {
+      "name": "www",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/main",
+      "config": {
+        "technology": "Next.js",
+        "hosting": "Vercel",
+        "deployHook": "https://api.vercel.com/v1/integrations/deploy/prj_123"
+      }
+    },
+    {
+      "name": "blog",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/blog",
+      "config": {
+        "technology": "Ghost",
+        "hosting": "DigitalOcean",
+        "deployHook": "https://blog.example.com/deploy?token=abc123"
+      }
+    },
+    {
+      "name": "api",
+      "type": "service",
+      "active": true,
+      "contentPath": "/websites/api",
+      "config": {
+        "technology": "Express.js",
+        "hosting": "AWS",
+        "endpoints": [
+          "/users",
+          "/products",
+          "/orders"
+        ]
+      }
+    },
+    {
+      "name": "docs",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/docs",
+      "config": {
+        "technology": "Docusaurus",
+        "hosting": "GitHub Pages",
+        "repository": "github.com/example/docs"
+      }
+    },
+    {
+      "name": "email",
+      "type": "service",
+      "active": true,
+      "config": {
+        "technology": "Exchange Online",
+        "provider": "Microsoft"
+      }
+    },
+    {
+      "name": "stats",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/stats",
+      "config": {
+        "technology": "React",
+        "hosting": "Netlify"
+      }
+    },
+    {
+      "name": "dev",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/dev",
+      "config": {
+        "technology": "Vue.js",
+        "hosting": "Netlify",
+        "protected": true,
+        "basicAuth": true
+      }
+    },
+    {
+      "name": "store",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/store",
+      "config": {
+        "technology": "Shopify",
+        "hosting": "Shopify",
+        "externalManagement": true
+      }
+    },
+    {
+      "name": "admin",
+      "type": "application",
+      "active": true,
+      "contentPath": "/websites/admin",
+      "config": {
+        "technology": "Angular",
+        "hosting": "Firebase",
+        "restricted": true,
+        "requiresLogin": true
+      }
+    },
+    {
+      "name": "portfolio",
+      "type": "website",
+      "active": true,
+      "contentPath": "/websites/portfolio",
+      "config": {
+        "technology": "HTML/CSS/JS",
+        "hosting": "GitHub Pages"
+      }
+    }
+  ],
+  "user": {
+    "username": "anshulyadav32",
+    "email": "me@anshulyadav.live",
+    "role": "admin",
+    "created": "2023-06-01",
+    "permissions": ["manage", "deploy", "configure", "edit-dns"],
+    "repositories": {
+      "github": "https://github.com/anshulyadav32/r-u-live-open-domain",
+      "gitlab": null,
+      "bitbucket": null
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true,
+      "deploymentAlerts": true,
+      "expiryReminders": true
+    }
+  },
+  "git": {
+    "repository": "r-u-live-open-domain",
+    "owner": "anshulyadav32",
+    "mainBranch": "main",
+    "deployBranch": "production",
+    "workflowEnabled": true,
+    "commitTemplate": "type(scope): summary",
+    "commitTypes": [
+      "feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"
+    ],
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm test"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "description": "You - personal subdomain",
+  "domain": "r-u.live",
+  "subdomain": "you",
+  
+  "owner": {
+    "repo": "https://github.com/username/you-site",
+    "email": "user@example.com"
+  },
+  
+  "record": {
+    "CNAME": "username.github.io"
+  },
+  
+  "proxied": true
+}

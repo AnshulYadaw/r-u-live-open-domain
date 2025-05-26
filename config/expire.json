@@ -1,0 +1,405 @@
+{
+  "domainInfo": {
+    "primaryDomain": "example.com",
+    "registrar": "ExampleRegistrar",
+    "registrationDate": "2023-01-15",
+    "expiryDate": "2025-01-15",
+    "autoRenew": true,
+    "registrarContact": "domains@example.com",
+    "adminContact": "admin@example.com",
+    "technicalContact": "tech@example.com",
+    "billingContact": "billing@example.com",
+    "whoisPrivacy": true,
+    "lastRenewalDate": "2023-01-15",
+    "nextRenewalDate": "2025-01-15",
+    "renewalCost": "12.99",
+    "renewalCurrency": "USD",
+    "transferLock": true,
+    "notes": "Premium domain with extended features"
+  },
+  "dnsRecords": [
+    {
+      "name": "www",
+      "type": "A",
+      "value": "192.0.2.1",
+      "ttl": 3600,
+      "created": "2023-01-15",
+      "expires": "2025-01-15",
+      "autoRenew": true,
+      "healthCheck": {
+        "enabled": true,
+        "interval": 300,
+        "timeout": 30,
+        "protocol": "HTTP",
+        "port": 443,
+        "path": "/health",
+        "expectedStatusCodes": [200, 201, 204],
+        "alertThreshold": 3
+      },
+      "backup": {
+        "enabled": true,
+        "alternateValue": "192.0.2.2",
+        "failoverEnabled": true,
+        "failoverTrigger": "3 consecutive failures"
+      }
+    },
+    {
+      "name": "mail",
+      "type": "MX",
+      "priority": 10,
+      "value": "mail.example.com",
+      "ttl": 3600,
+      "created": "2023-01-15",
+      "expires": "2025-01-15",
+      "autoRenew": true,
+      "healthCheck": {
+        "enabled": true,
+        "interval": 600,
+        "timeout": 30,
+        "protocol": "SMTP",
+        "port": 25,
+        "alertThreshold": 3
+      }
+    },
+    {
+      "name": "@",
+      "type": "A",
+      "value": "192.0.2.1",
+      "ttl": 3600,
+      "created": "2023-01-15",
+      "expires": "2025-01-15",
+      "autoRenew": true,
+      "healthCheck": {
+        "enabled": true,
+        "interval": 300,
+        "timeout": 30,
+        "protocol": "HTTPS",
+        "port": 443,
+        "path": "/",
+        "expectedStatusCodes": [200]
+      }
+    },
+    {
+      "name": "anshul",
+      "type": "CNAME",
+      "value": "anshulyadav.github.io",
+      "ttl": 3600,
+      "created": "2023-02-10",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "anshulyadav",
+      "type": "CNAME",
+      "value": "anshulyadav.github.io",
+      "ttl": 3600,
+      "created": "2023-02-10",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "me",
+      "type": "CNAME",
+      "value": "personal-profile.example.com",
+      "ttl": 3600,
+      "created": "2023-02-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "webhost",
+      "type": "A",
+      "value": "192.0.2.10",
+      "ttl": 3600,
+      "created": "2023-03-01",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "ay",
+      "type": "CNAME",
+      "value": "anshulyadav.github.io",
+      "ttl": 3600,
+      "created": "2023-03-05",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "you",
+      "type": "CNAME",
+      "value": "users.example.com",
+      "ttl": 3600,
+      "created": "2023-03-10",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "dev",
+      "type": "CNAME",
+      "value": "development.example.com",
+      "ttl": 3600,
+      "created": "2023-03-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "server",
+      "type": "A",
+      "value": "192.0.2.20",
+      "ttl": 3600,
+      "created": "2023-03-20",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "passwordgenerator",
+      "type": "CNAME",
+      "value": "tools.example.com",
+      "ttl": 3600,
+      "created": "2023-04-05",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "example",
+      "type": "CNAME",
+      "value": "demo.example.com",
+      "ttl": 3600,
+      "created": "2023-04-10",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "github",
+      "type": "CNAME",
+      "value": "anshulyadav.github.io",
+      "ttl": 3600,
+      "created": "2023-04-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "opensource",
+      "type": "CNAME",
+      "value": "projects.example.com",
+      "ttl": 3600,
+      "created": "2023-04-20",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "opendomain",
+      "type": "CNAME",
+      "value": "domains.example.com",
+      "ttl": 3600,
+      "created": "2023-04-25",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "r-u",
+      "type": "CNAME",
+      "value": "status.example.com",
+      "ttl": 3600,
+      "created": "2023-05-01",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "portfolio",
+      "type": "CNAME",
+      "value": "projects.example.com",
+      "ttl": 3600,
+      "created": "2023-05-05",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "cv",
+      "type": "CNAME",
+      "value": "resume.example.com",
+      "ttl": 3600,
+      "created": "2023-05-10",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "resume",
+      "type": "CNAME",
+      "value": "resume.example.com",
+      "ttl": 3600,
+      "created": "2023-05-10",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "blog",
+      "type": "CNAME",
+      "value": "blog-platform.example.com",
+      "ttl": 3600,
+      "created": "2023-05-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "api",
+      "type": "A",
+      "value": "192.0.2.5",
+      "ttl": 3600,
+      "created": "2023-05-20",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "docs",
+      "type": "CNAME",
+      "value": "documentation.example.com",
+      "ttl": 3600,
+      "created": "2023-05-25",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "readme",
+      "type": "CNAME",
+      "value": "documentation.example.com",
+      "ttl": 3600,
+      "created": "2023-05-25",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "_dmarc",
+      "type": "TXT",
+      "value": "v=DMARC1; p=reject; rua=mailto:dmarc@example.com",
+      "ttl": 3600,
+      "created": "2023-01-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "_spf",
+      "type": "TXT",
+      "value": "v=spf1 mx ~all",
+      "ttl": 3600,
+      "created": "2023-01-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    },
+    {
+      "name": "localhost",
+      "type": "A",
+      "value": "127.0.0.1",
+      "ttl": 3600,
+      "created": "2023-01-15",
+      "expires": "2025-01-15",
+      "autoRenew": true
+    }
+  ],
+  "certificates": [
+    {
+      "domain": "example.com",
+      "subdomains": ["www", "mail", "api"],
+      "issuer": "Let's Encrypt",
+      "issuedDate": "2023-01-20",
+      "expiryDate": "2023-04-20",
+      "autoRenew": true,
+      "lastRenewal": "2023-01-20",
+      "nextRenewal": "2023-04-10",
+      "renewalScript": "/scripts/renew-cert.sh",
+      "alertThreshold": 14,
+      "monitoringEnabled": true,
+      "certificateType": "EV",
+      "keyType": "RSA-2048",
+      "keyStorageLocation": "/secure/certs/",
+      "backupLocation": "/backup/certs/"
+    },
+    {
+      "domain": "*.example.com",
+      "subdomains": ["wildcard"],
+      "issuer": "Let's Encrypt",
+      "issuedDate": "2023-01-25",
+      "expiryDate": "2023-04-25",
+      "autoRenew": true,
+      "lastRenewal": "2023-01-25",
+      "nextRenewal": "2023-04-15",
+      "renewalScript": "/scripts/renew-wildcard-cert.sh",
+      "alertThreshold": 14,
+      "monitoringEnabled": true,
+      "certificateType": "DV",
+      "keyType": "RSA-4096",
+      "dnsValidation": true,
+      "validationRecordName": "_acme-challenge",
+      "validationRecordType": "TXT"
+    }
+  ],
+  "notifications": {
+    "emailRecipients": [
+      "admin@example.com",
+      "webmaster@example.com"
+    ],
+    "expiryWarningDays": [30, 14, 7, 3, 1],
+    "smsNotifications": false,
+    "webhookUrl": "https://example.com/api/dns-notifications",
+    "slackWebhook": "https://hooks.slack.com/services/XXXX/YYYY/ZZZZ",
+    "teamsWebhook": "https://example.webhook.office.com/webhookb2/XXXX",
+    "escalationContacts": [
+      {
+        "name": "IT Manager",
+        "email": "manager@example.com",
+        "phone": "+1234567890",
+        "escalationThreshold": "48 hours with no response"
+      }
+    ],
+    "notificationTemplates": {
+      "expiryWarning": "Domain {domain} is expiring in {days} days",
+      "certificateExpiry": "SSL Certificate for {domain} expires on {date}",
+      "healthCheckFailure": "{record} health check failed at {timestamp}"
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "provider": "UptimeRobot",
+    "apiKey": "${UPTIME_ROBOT_API_KEY}",
+    "checkInterval": 300,
+    "statusPageUrl": "https://status.example.com",
+    "alertIntegrations": ["email", "slack", "pagerduty"],
+    "responseTimeAlert": 2000,
+    "uptimeAlertThreshold": 99.9
+  },
+  "backupProvider": {
+    "name": "CloudFlare",
+    "accountId": "cf12345",
+    "zoneId": "zone98765",
+    "apiKey": "${CF_API_KEY}",
+    "lastBackup": "2023-05-25T10:15:30Z",
+    "backupSchedule": "daily",
+    "backupRetention": "30 days"
+  },
+  "history": [
+    {
+      "date": "2023-01-15",
+      "action": "Domain registration",
+      "user": "admin@example.com"
+    },
+    {
+      "date": "2023-01-20",
+      "action": "SSL certificate issued",
+      "user": "system"
+    },
+    {
+      "date": "2023-02-10",
+      "action": "Added subdomain records",
+      "user": "webmaster@example.com"
+    }
+  ],
+  "lastUpdated": "2023-06-01T12:00:00Z",
+  "lastHealthCheck": "2023-06-01T11:45:00Z",
+  "healthStatus": "healthy",
+  "expiryCheckerVersion": "1.2.3",
+  "complianceStatus": {
+    "gdpr": true,
+    "ccpa": true,
+    "lastCheck": "2023-05-15"
+  }
+}

@@ -1,6 +1,0 @@
-subdomain: "example"
-owner:
-  name: "Example User"
-  email: "example@example.com"
-record:
-  A: "1.2.3.4"

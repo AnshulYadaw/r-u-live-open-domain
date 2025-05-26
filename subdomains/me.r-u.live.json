@@ -1,0 +1,16 @@
+{
+  "description": "Me subdomain for personal use",
+  "domain": "r-u.live",
+  "subdomain": "me",
+  
+  "owner": {
+    "repo": "https://github.com/r-u-live/me-personal",
+    "email": "admin@r-u.live"
+  },
+  
+  "record": {
+    "CNAME": "personal-site.vercel.app"
+  },
+  
+  "proxied": true
+}

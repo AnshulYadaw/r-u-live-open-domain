@@ -1,0 +1,60 @@
+{
+  "subdomains": [
+    {
+      "name": "www",
+      "owner": "admin",
+      "created": "2023-01-01",
+      "purpose": "Main website",
+      "technology": "Next.js",
+      "status": "active"
+    },
+    {
+      "name": "mail",
+      "owner": "admin",
+      "created": "2023-01-01",
+      "purpose": "Email services",
+      "technology": "ProtonMail",
+      "status": "active"
+    },
+    {
+      "name": "anshul",
+      "owner": "anshulyadav",
+      "created": "2023-02-15",
+      "purpose": "Personal profile",
+      "technology": "React",
+      "status": "active"
+    },
+    {
+      "name": "api",
+      "owner": "devteam",
+      "created": "2023-03-10",
+      "purpose": "API endpoints",
+      "technology": "Express.js",
+      "status": "active"
+    },
+    {
+      "name": "docs",
+      "owner": "devteam",
+      "created": "2023-03-15",
+      "purpose": "Documentation",
+      "technology": "Docusaurus",
+      "status": "active"
+    },
+    {
+      "name": "blog",
+      "owner": "content",
+      "created": "2023-04-01",
+      "purpose": "Blog posts",
+      "technology": "Ghost",
+      "status": "active"
+    },
+    {
+      "name": "portfolio",
+      "owner": "anshulyadav",
+      "created": "2023-05-01",
+      "purpose": "Portfolio showcase",
+      "technology": "Vue.js",
+      "status": "active"
+    }
+  ]
+}

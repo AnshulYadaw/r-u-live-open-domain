@@ -1,0 +1,16 @@
+{
+  "description": "Personal blog hosted on Netlify",
+  "domain": "r-u.live",
+  "subdomain": "blog",
+  
+  "owner": {
+    "repo": "https://github.com/username/blog",
+    "email": "user@example.com"
+  },
+  
+  "record": {
+    "CNAME": "blog-site.netlify.app"
+  },
+  
+  "proxied": true
+}

@@ -1,0 +1,16 @@
+{
+  "description": "Short name ay for personal use",
+  "domain": "r-u.live",
+  "subdomain": "ay",
+  
+  "owner": {
+    "repo": "https://github.com/anshulyadaw/personal",
+    "email": "anshul@example.com"
+  },
+  
+  "record": {
+    "CNAME": "anshulyadaw.github.io"
+  },
+  
+  "proxied": true
+}

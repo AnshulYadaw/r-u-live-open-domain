@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>r-u.live - Free Subdomains</title>
+    <style>
+        :root {
+            --primary-color: #4a6ef5;
+            --secondary-color: #6c757d;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.2rem;
+        }
+        
+        section {
+            padding: 2rem 0;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        .steps {
+            margin: 2rem 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        .steps ol {
+            margin-left: 2rem;
+        }
+        
+        .steps li {
+            margin-bottom: 1rem;
+        }
+        
+        .code-block {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .domains {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .domain-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .steps {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>r-u.live</h1>
+            <p>Free subdomains for everyone</p>
+            <a href="#register" class="btn" style="margin-top: 20px;">Register Now</a>
+        </div>
+    </header>
+    
+    <section class="container">
+        <h2>Available Domains</h2>
+        <div class="domains">
+            <div class="domain-item">
+                <h3>*.r-u.live</h3>
+                <p>Perfect for personal websites, portfolios, and projects</p>
+                <p>Example: <strong>yourname.r-u.live</strong></p>
+                <p>Status: <span style="color: var(--success-color); font-weight: bold;">ACTIVE</span></p>
+            </div>
+            <!-- Additional domains can be added here in the future -->
+        </div>
+    </section>
+    
+    <section class="container">
+        <h2>Why Choose r-u.live?</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+            <div style="flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3>🔒 Secure</h3>
+                <p>All subdomains come with SSL protection and security features via Cloudflare</p>
+            </div>
+            <div style="flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3>🚀 Fast</h3>
+                <p>Powered by Cloudflare's global CDN for lightning-fast page loads</p>
+            </div>
+            <div style="flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3>💯 Free</h3>
+                <p>No hidden fees or charges, ever</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="container" id="register">
+        <h2>How to Register Your Subdomain</h2>
+        <div class="steps">
+            <ol>
+                <li>Star and fork our <a href="https://github.com/yourusername/r-u-live" target="_blank" rel="noopener">GitHub repository</a></li>
+                <li>Create a new JSON file in the <code>/domains</code> folder with your desired subdomain name (example: <strong>mysite.json</strong>)</li>
+                <li>Format your file according to our guidelines:</li>
+            </ol>
+            
+            <div class="code-block">
+<pre>{
+  "description": "Your project description",
+  "domain": "r-u.live",
+  "subdomain": "your-subdomain",
+  
+  "owner": {
+    "repo": "https://github.com/yourusername/your-repo",
+    "email": "your.email@example.com"
+  },
+  
+  "record": {
+    "A": ["192.0.2.1"],
+    "CNAME": "your-site.com"
+  },
+  
+  "proxied": true
+}</pre>
+            </div>
+            
+            <ol start="4">
+                <li>Create a pull request with your changes</li>
+                <li>Wait for approval (usually within 24 hours)</li>
+                <li>Once merged, your subdomain will be active!</li>
+            </ol>
+        </div>
+        <a href="https://github.com/yourusername/r-u-live" class="btn" target="_blank" rel="noopener">Get Started Now</a>
+        
+        <div style="margin-top: 2rem; background-color: #f8f9fa; padding: 1rem; border-left: 4px solid var(--primary-color); border-radius: 4px;">
+            <h3>Record Types Explained</h3>
+            <p>Depending on your needs, you can use different types of DNS records:</p>
+            <ul>
+                <li><strong>A Record</strong>: Points your subdomain to an IPv4 address (e.g., server IP)</li>
+                <li><strong>CNAME Record</strong>: Points your subdomain to another domain (e.g., GitHub Pages)</li>
+                <li><strong>MX Record</strong>: For email services</li>
+                <li><strong>TXT Record</strong>: For verification and SPF records</li>
+            </ul>
+            <p>Not sure what to use? <a href="https://github.com/yourusername/r-u-live/discussions" target="_blank" rel="noopener">Ask in our discussions</a></p>
+        </div>
+    </section>
+    
+    <section class="container">
+        <h2>Examples and Use Cases</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+            <div style="flex: 1; min-width: 300px; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3>GitHub Pages</h3>
+                <div class="code-block">
+<pre>{
+  "description": "My personal portfolio",
+  "domain": "r-u.live",
+  "subdomain": "portfolio",
+  "owner": {
+    "repo": "https://github.com/username/portfolio",
+    "email": "email@example.com"
+  },
+  "record": {
+    "CNAME": "username.github.io"
+  },
+  "proxied": true
+}</pre>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 300px; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3>Personal Server</h3>
+                <div class="code-block">
+<pre>{
+  "description": "My personal blog",
+  "domain": "r-u.live",
+  "subdomain": "blog",
+  "owner": {
+    "repo": "https://github.com/username/blog",
+    "email": "email@example.com"
+  },
+  "record": {
+    "A": ["203.0.113.1"]
+  },
+  "proxied": false
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <h2>Rules and Guidelines</h2>
+        <p>To ensure the quality and security of our service, please follow these guidelines:</p>
+        <ul>
+            <li>Provide a clear description of your project</li>
+            <li>Don't use subdomains for illegal activities</li>
+            <li>Keep your information up-to-date</li>
+            <li>Follow our <a href="https://github.com/yourusername/r-u-live/blob/main/terms.md" target="_blank" rel="noopener">Terms of Service</a></li>
+        </ul>
+    </section>
+    
+    <section class="container">
+        <h2>Frequently Asked Questions</h2>
+        <div style="background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <details>
+                <summary>How long does it take to activate my subdomain?</summary>
+                <p>After your pull request is merged, it usually takes 5-15 minutes for the DNS changes to propagate, but it can take up to 24 hours in some cases.</p>
+            </details>
+            <details>
+                <summary>Can I update my subdomain later?</summary>
+                <p>Yes! Simply submit a new pull request with your updated JSON file.</p>
+            </details>
+            <details>
+                <summary>Is SSL/TLS supported?</summary>
+                <p>Yes, all subdomains automatically get SSL/TLS support through Cloudflare when proxied is set to true.</p>
+            </details>
+            <details>
+                <summary>Are there any usage limits?</summary>
+                <p>We don't impose strict limits, but excessive bandwidth usage may be reviewed. This service is intended for personal and small project use.</p>
+            </details>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 r-u.live | <a href="https://github.com/yourusername/r-u-live" style="color: white;" rel="noopener">GitHub</a></p>
+            <p style="margin-top: 10px; font-size: 0.9em;">A free service for the developer community</p>
+        </div>
+    </footer>
+</body>
+</html>
